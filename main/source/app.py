@@ -2,6 +2,7 @@ import pandas as pd
 import dash
 from dash import dcc, html, Input, Output
 import plotly.express as px
+import dash_mantine_components as dmc
 
 df = pd.read_excel("../../data/CO2.xlsx", sheet_name="fossil_CO2_totals_by_country")
 columns = df.columns.to_list()
