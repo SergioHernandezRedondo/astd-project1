@@ -153,7 +153,8 @@ def update_map(selected_year):
         framecolor = "#e6f2ff" #DESCOMENTAEmisiones de CO₂ por país y añoR Y PONER EL DE ARRIBA TRUE SI SE QUIERE EL MAPA CON UN BORDE DELIMITADOR
     )
     fig.update_layout(
-        paper_bgcolor=BACKGROUND_COLOR
+        paper_bgcolor=BACKGROUND_COLOR,
+        dragmode = False
     )
     return fig
 
