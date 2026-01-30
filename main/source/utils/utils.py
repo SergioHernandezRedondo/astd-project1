@@ -7,33 +7,33 @@ def open_capita(path = "../../data/CO2.xlsx", name ="fossil_CO2_per_capita_by_co
 def open_sector(path = "../../data/CO2.xlsx", name = "fossil_CO2_by_sector_and_countr"):
     return pd.read_excel(path, sheet_name=name)
 
-def sum_co2_countries():
+def sum_co2_countries(sheet_name):
     """
     Suma toda la contaminación por cada país de los datos existentes
     :return: DataFrame (n, 2): primer elemento nombre pais, segundo elemento suma
     """
-    df = open_totals_country()
+    df = open_totals_country(name=sheet_name)
     names = df["Country"]
     min_year, max_year, _ = get_years(df)
     suma = df.loc[:, min_year:max_year].sum(axis=1)
 
     return pd.concat([names, suma.rename("suma")], axis=1)
 
-def sum_co2_all_countries():
+def sum_co2_all_countries(sheet_name):
     """
     Suma toda la contaminación de todos los paises en todos los años
     :return la suma total
     """
-    df = sum_co2_countries()
+    df = sum_co2_countries(sheet_name)
     return df["suma"].sum()
 
-def get_top5_countries():
+def get_top5_countries(sheet_name = "fossil_CO2_totals_by_country"):
     """
     Selecciona los 5 paises con más contaminación histórica, también añade otra fila con los demás países
     :return: DataFrame de los 5 paises con su contaminacion y los otros
     """
-    df = sum_co2_countries()
-    total = sum_co2_all_countries()
+    df = sum_co2_countries(sheet_name)
+    total = sum_co2_all_countries(sheet_name)
 
     top5 = df.nlargest(5, "suma")
 
@@ -62,3 +62,18 @@ def get_years(df):
         print("ERROR: no hay años en la lista de columnas")
         exit(1)
     return min_year, max_year, years
+
+def get_max_min_emission(sheet_name = "fossil_CO2_totals_by_country"):
+    df = open_totals_country(name=sheet_name)
+    _, _, years = get_years(df)
+    min_value = max_value = df[years[1]][0]
+
+    for year in years:
+        min_y = df[year].min()
+        max_y = df[year].max()
+
+        if min_y < min_value:
+            min_value = min_y
+        if max_y > max_value:
+            max_value = max_y
+    return min_value, max_value

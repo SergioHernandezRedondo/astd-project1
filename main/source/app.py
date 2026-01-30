@@ -2,44 +2,25 @@ import pandas as pd
 import dash
 from dash import dcc, html, Input, Output
 import plotly.express as px
-import dash_mantine_components as dmc
 from utils.utils import *
+from utils.figures import *
 
 df = pd.read_excel("../../data/CO2.xlsx", sheet_name="fossil_CO2_totals_by_country")
 columns = df.columns.to_list()
 
 df_top5 = get_top5_countries()
+df_top5_capita = get_top5_countries("fossil_CO2_per_capita_by_countr")
 
 BACKGROUND_COLOR = "#101925"
 BORDER_COLOR = "#141F2E"
 
+MIN_EMISSION, MAX_EMISSION = get_max_min_emission("fossil_CO2_totals_by_country")
+
 min_year, max_year, years = get_years(df)
 
-fig_pie = px.pie(
-    df_top5,
-    names="Country",         # etiquetas del pastel
-    values="suma",   # valores que determinan tamaño de cada porción
-    hole=0.4                   # hace un donut en vez de un pastel completo (opcional)
-)
-
-fig_pie.update_traces(
-    marker=dict(line=dict(color='#233D38', width=2)),
-    textposition="inside",    # pone los valores dentro de cada sector
-    textinfo="percent+label", # muestra porcentaje + nombre
-    textfont=dict(
-        color='white',  # color de todos los textos
-        size=14,        # tamaño
-        family='Arial'  # fuente
-    )
-    # pull=[0.05, 0.05, 0.05, 0.05, 0.05, 0.05]   # sacar porciones
-)
-
-fig_pie.update_layout(
-    paper_bgcolor = BACKGROUND_COLOR,
-    plot_bgcolor="white",
-)
-
-fig_pie.update_layout(showlegend=False)
+# Crear los donuts
+fig_pie = get_pie_chart(df_top5)
+fig_pie_capita = get_pie_chart(df_top5_capita)
 
 app = dash.Dash(__name__)
 
@@ -101,22 +82,56 @@ app.layout = html.Div([
         "marginBottom": "100px"
     }),
     html.Div([
-        html.H2(
-            "Top 5 Countries with the Most Historical Emissions",
-            style={
-                "textAlign": "center",
-                "color": "white",
-                "marginBottom": "0px"
-            }
-        ),
-        dcc.Graph(
-            id="pie-chart",
-            figure=fig_pie,
-            style={"height": "60vh", "width": "60vw", "margin": "0 auto"}
-        )
-    ], style = {
-        "backgroundColor": BACKGROUND_COLOR
-    }),
+        html.Div([
+            html.H4(
+                "Top 5 Countries with the Highest Historical CO₂ Emissions",
+                style={
+                    "textAlign": "center",
+                    "color": "white",
+                    "marginBottom": "0px",
+                    "flex": "1"
+                }
+            ),
+            dcc.Graph(
+                id="pie-chart",
+                figure=fig_pie,
+                style={"height": "45vh", "flex": "1"}
+            )
+        ], style = {
+            "flex": "1 1 0",
+            "backgroundColor": BACKGROUND_COLOR,
+
+        }),
+        html.Div([
+            html.H4(
+                "Top 5 Countries with the Highest Historical CO₂ Emissions By Population",
+                style={
+                    "textAlign": "center",
+                    "color": "white",
+                    "marginBottom": "0px",
+                    "flex": "2"
+                }
+            ),
+            dcc.Graph(
+                id="pie-chart-capita",
+                figure=fig_pie_capita,
+                style={"height": "45vh", "flex": "2"}
+            )
+        ], style = {
+            "flex": "1 1 0",
+            "backgroundColor": BACKGROUND_COLOR
+
+        }),
+    ],
+        style={
+            "display": "flex",
+            "flexDirection": "row",
+            "justifyContent": "space-between",
+            "alignItems": "center",
+            "gap": "20px",
+            "width": "100%"
+        }
+    )
 
 ],
 style={
@@ -136,7 +151,8 @@ def update_map(selected_year):
         color=selected_year,
         hover_name="Country",
         color_continuous_scale="RdYlGn_r",
-        projection=  "equirectangular"#"mercator"#"natural earth"#"equirectangular"
+        projection=  "equirectangular",
+        range_color = [MIN_EMISSION, MAX_EMISSION]
     )
     fig.update_geos(
         lataxis_range=[-60, 90], # Quita la antártida del mapa
@@ -150,7 +166,7 @@ def update_map(selected_year):
         showlakes=True,
         lakecolor=BACKGROUND_COLOR,
         showframe=True,
-        framecolor = "#e6f2ff" #DESCOMENTAEmisiones de CO₂ por país y añoR Y PONER EL DE ARRIBA TRUE SI SE QUIERE EL MAPA CON UN BORDE DELIMITADOR
+        framecolor = "#e6f2ff" #DESCOMENTAR Y PONER EL DE ARRIBA TRUE SI SE QUIERE EL MAPA CON UN BORDE DELIMITADOR
     )
     fig.update_layout(
         paper_bgcolor=BACKGROUND_COLOR,
