@@ -6,6 +6,7 @@ from utils.utils import *
 from utils.figures import *
 from pathlib import Path
 import numpy as np
+from datetime import datetime
 
 BASE_DIR = Path(__file__).resolve().parent
 
@@ -77,6 +78,21 @@ app.layout = html.Div([
         "borderRadius": "12px",
         "position": "relative"
     }),
+        # Dentro de app.layout, añade este bloque debajo del mapa de emisiones
+    html.Div([
+        html.H3("Análisis Atmosférico por Posición", 
+                style={"color": "white", "marginTop": "30px", "textAlign": "center"}),
+        html.P("Pulsa sobre cualquier país en el mapa superior para calcular su masa de aire actual.",
+            style={"color": "#a1a1a1", "textAlign": "center", "marginBottom": "20px"}),
+        
+        # Solo el gráfico, sin botones ni entradas de texto
+        dcc.Graph(id='grafico-aire')
+    ], style={
+        "backgroundColor": BORDER_COLOR, 
+        "padding": "25px", 
+        "borderRadius": "15px",
+        "marginTop": "20px"
+    }),
     html.Div([
         html.Hr(style={
             'borderWidth': '1px',      # grosor de la línea
@@ -141,6 +157,7 @@ app.layout = html.Div([
         }
     )
 
+
 ],
 style={
     "backgroundColor": BACKGROUND_COLOR,
@@ -160,10 +177,10 @@ def update_map(selected_year):
         hover_name="Country",
         color_continuous_scale="RdYlGn_r",
         projection=  "equirectangular",
-        range_color = [MIN_EMISSION, p95]
+        range_color = [MIN_EMISSION, p95],
     )
     fig.update_geos(
-        lataxis_range=[-60, 90], # Quita la antártida del mapa
+        lataxis_range=[-57, 90], # Quita la antártida del mapa
         bgcolor=BACKGROUND_COLOR,
         showocean=True,
         oceancolor=BACKGROUND_COLOR,
@@ -179,6 +196,58 @@ def update_map(selected_year):
     fig.update_layout(
         paper_bgcolor=BACKGROUND_COLOR,
         dragmode = False
+    )
+    return fig
+
+
+# Mapa rápido de latitudes medias (puedes ampliarlo o usar el centroide del país)
+LATITUDES_PAISES = {
+    "ESP": 40.4, "USA": 37.0, "CHN": 35.8, "BRA": -14.2, "RUS": 61.5, "AUS": -25.2,
+    "FRA": 46.2, "GER": 51.1, "IND": 20.5, "MEX": 23.6, "ARG": -38.4, "ZAF": -30.5
+}
+
+@app.callback(
+    Output('grafico-aire', 'figure'),
+    Input('choropleth-map', 'clickData') # Escuchamos al mapa principal
+)
+def actualizar_por_puntero(clickData):
+    # Si no han hecho clic, usamos una posición por defecto (p. ej. España)
+    lat_seleccionada = 40.4
+    nombre_pais = "España (Default)"
+    
+    if clickData:
+        # Extraemos el código del país donde se hizo clic
+        iso_code = clickData['points'][0]['location']
+        nombre_pais = clickData['points'][0]['hovertext']
+        # Buscamos la latitud (o usamos 0 si no está en el mini-diccionario)
+        lat_seleccionada = LATITUDES_PAISES.get(iso_code, 0.0)
+
+    # Calculamos el ángulo cenital aproximado para HOY (simplificado)
+    # En un proyecto real usaríamos pvlib, pero aquí estimamos según la latitud
+    dia_del_año = datetime.now().timetuple().tm_yday
+    declina_solar = 23.45 * np.sin(np.radians((360/365) * (284 + dia_del_año)))
+    angulo_zenit = abs(lat_seleccionada - declina_solar)
+    
+    # Limitamos para evitar errores matemáticos en el horizonte
+    angulo_zenit = min(89, max(0, angulo_zenit))
+    
+    # Generamos el gráfico de la curva
+    angulos = np.linspace(0, 89, 100)
+    masas = [calcular_masa_aire(a) for a in angulos]
+    masa_actual = calcular_masa_aire(angulo_zenit)
+    
+    fig = px.line(x=angulos, y=masas, template="plotly_dark",
+                 labels={'x': 'Inclinación Cenital (°)', 'y': 'Masa de Aire (AM)'})
+    
+    fig.add_scatter(x=[angulo_zenit], y=[masa_actual], mode='markers+text',
+                    text=[f"{nombre_pais}: {masa_actual:.2f} AM"],
+                    textposition="top center",
+                    marker=dict(size=15, color='#00ffcc')) # Un color cian eléctrico
+    
+    fig.update_layout(
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
+        margin=dict(l=10, r=10, t=10, b=10)
     )
     return fig
 
