@@ -4,17 +4,22 @@ from dash import dcc, html, Input, Output
 import plotly.express as px
 from utils.utils import *
 from utils.figures import *
+from pathlib import Path
 
-df = pd.read_excel("../../data/CO2.xlsx", sheet_name="fossil_CO2_totals_by_country")
+BASE_DIR = Path(__file__).resolve().parent
+
+CSV_PATH = f"{BASE_DIR}/../../data/CO2.xlsx"
+
+df = pd.read_excel(CSV_PATH, sheet_name="fossil_CO2_per_capita_by_countr")
 columns = df.columns.to_list()
 
-df_top5 = get_top5_countries()
-df_top5_capita = get_top5_countries("fossil_CO2_per_capita_by_countr")
+df_top5 = get_top5_countries(path=CSV_PATH)
+df_top5_capita = get_top5_countries(CSV_PATH,"fossil_CO2_per_capita_by_countr")
 
 BACKGROUND_COLOR = "#101925"
 BORDER_COLOR = "#141F2E"
 
-MIN_EMISSION, MAX_EMISSION = get_max_min_emission("fossil_CO2_totals_by_country")
+MIN_EMISSION, MAX_EMISSION = get_max_min_emission(CSV_PATH,"fossil_CO2_per_capita_by_countr")
 
 min_year, max_year, years = get_years(df)
 
@@ -175,4 +180,4 @@ def update_map(selected_year):
     return fig
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host="127.0.0.1", port=8050, debug=False)
