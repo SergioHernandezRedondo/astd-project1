@@ -5,6 +5,7 @@ import plotly.express as px
 from utils.utils import *
 from utils.figures import *
 from pathlib import Path
+import numpy as np
 
 BASE_DIR = Path(__file__).resolve().parent
 
@@ -12,6 +13,8 @@ CSV_PATH = f"{BASE_DIR}/../../data/CO2.xlsx"
 
 df = pd.read_excel(CSV_PATH, sheet_name="fossil_CO2_per_capita_by_countr")
 columns = df.columns.to_list()
+columnas_años = [col for col in df.columns if str(col).isnumeric()]
+p95 = np.percentile(df[columnas_años].values.flatten(), 95)
 
 df_top5 = get_top5_countries(path=CSV_PATH)
 df_top5_capita = get_top5_countries(CSV_PATH,"fossil_CO2_per_capita_by_countr")
@@ -157,7 +160,7 @@ def update_map(selected_year):
         hover_name="Country",
         color_continuous_scale="RdYlGn_r",
         projection=  "equirectangular",
-        range_color = [MIN_EMISSION, MAX_EMISSION]
+        range_color = [MIN_EMISSION, p95]
     )
     fig.update_geos(
         lataxis_range=[-60, 90], # Quita la antártida del mapa
