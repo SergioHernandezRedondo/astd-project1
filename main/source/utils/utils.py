@@ -77,9 +77,3 @@ def get_max_min_emission(path, sheet_name = "fossil_CO2_totals_by_country"):
         if max_y > max_value:
             max_value = max_y
     return min_value, max_value
-
-def calcular_masa_aire(angulo_zenit):
-    import numpy as np
-    z_rad = np.radians(angulo_zenit)
-    am = 1 / (np.cos(z_rad) + 0.50572 * (96.07995 - angulo_zenit)**(-1.6364))
-    return am
