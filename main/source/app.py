@@ -59,22 +59,7 @@ app.layout = html.Div([
                 ),
                 style={"width": "80%", "margin": "0 auto", "backgroundColor": BORDER_COLOR, "borderRadius": "10px", "padding": "10px"}
             ),
-        ], style={"width": "70%", "backgroundColor": BORDER_COLOR, "borderRadius": "10px"}),
-
-        html.Div([
-            html.H4("Emissions by Sector for Selected Country", 
-                    style={"color": "white", "textAlign": "center", "fontSize": "18px"}),
-            dcc.Graph(
-                id='grafico-sectores',
-                style={"height": "400px"} 
-            )
-        ], style={
-            "width": "28%", 
-            "backgroundColor": BORDER_COLOR, 
-            "justifyContent": "center",
-            "borderRadius": "10px",
-            "padding": "10px"
-        })
+        ], style={"width": "100%", "backgroundColor": BORDER_COLOR, "borderRadius": "10px"}),
 
     ], style={
         "display": "flex", 
@@ -100,21 +85,22 @@ app.layout = html.Div([
             html.H4("Internal Sectoral Distribution", 
                     style={"color": "white", "textAlign": "center", "fontSize": "18px"}),
             dcc.Graph(id='treemap-sectores', style={"height": "400px"})
-        ], style={"flex": "1", "backgroundColor": BORDER_COLOR, "padding": "20px", "borderRadius": "15px"}),
+        ], style={"backgroundColor": BORDER_COLOR, "padding": "20px", "borderRadius": "15px", "width": "50%"}),
 
-        # Bloque del Gauge con su selector
         html.Div([
-            html.H4("Global Sectoral Significance", 
+            html.H4("Emissions by Sector for Selected Country", 
                     style={"color": "white", "textAlign": "center", "fontSize": "18px"}),
-            dcc.Dropdown(
-                id='sector-dropdown',
-                options=[{'label': s, 'value': s} for s in lista_sectores],
-                value=lista_sectores[0],
-                clearable=False,
-                style={"backgroundColor": "#1a2634", "color": "black", "marginBottom": "20px"}
-            ),
-            dcc.Graph(id='gauge-comparativo', style={"height": "320px"})
-        ], style={"flex": "1", "backgroundColor": BORDER_COLOR, "padding": "20px", "borderRadius": "15px"})
+            dcc.Graph(
+                id='grafico-sectores',
+                style={"height": "400px"} 
+            )
+        ], style={
+            "backgroundColor": BORDER_COLOR, 
+            "justifyContent": "center",
+            "borderRadius": "10px",
+            "padding": "10px",
+            "width": "50%"
+        })
 
     ], style={
         "display": "flex", "flexDirection": "row", "gap": "20px", "marginTop": "20px", "width": "100%"
@@ -319,47 +305,6 @@ def update_treemap(clickData, selected_year):
     
     return fig
 
-# --- Callback para el Gauge Comparativo ---
-@app.callback(
-    Output('gauge-comparativo', 'figure'),
-    [Input('choropleth-map', 'clickData'),
-     Input('year-slider', 'value'),
-     Input('sector-dropdown', 'value')]
-)
-def update_gauge(clickData, selected_year, selected_sector):
-    iso_code = "ESP"
-    nombre_pais = "Spain"
-    if clickData:
-        iso_code = clickData['points'][0]['location']
-        nombre_pais = clickData['points'][0]['hovertext']
-
-    # Emisión del país en ese sector y año
-    fila = df_sector[(df_sector["ISOcode"] == iso_code) & (df_sector["Sector"] == selected_sector)]
-    val_pais = fila[selected_year].values[0] if not fila.empty else 0
-    
-    # Emisión mundial de ese mismo sector y año
-    val_mundo = df_sector[df_sector["Sector"] == selected_sector][selected_year].sum()
-    
-    # Porcentaje de aporte
-    porcentaje = (val_pais / val_mundo * 100) if val_mundo > 0 else 0
-
-    fig = go.Figure(go.Indicator(
-        mode = "gauge+number",
-        value = porcentaje,
-        number = {'suffix': "%", 'font': {'size': 24}, 'valueformat': ".2f"},
-        title = {'text': f"{nombre_pais}'s Contribution to Global {selected_sector} ({selected_year})",'font': {'size': 14}},
-        gauge = {
-            'axis': {'range': [0, 100]},
-            'bar': {'color': "#00ffcc"},
-            'bgcolor': "#101925",
-            'steps': [{'range': [0, 100], 'color': "#141F2E"}],
-            'threshold': {'line': {'color': "red", 'width': 3}, 'value': porcentaje}
-        }
-    ))
-    
-    fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', font={'color': "white"}, margin=dict(l=20, r=20, t=50, b=20))
-    return fig
-
 @app.callback(
     Output('bar-comparativo', 'figure'),
     [Input('choropleth-map', 'clickData'),
@@ -372,11 +317,10 @@ def update_bar_comparison(clickData, selected_year):
         iso_code = clickData['points'][0]['location']
         nombre_pais = clickData['points'][0]['hovertext']
 
-    # 1. Identificar los 3 sectores con mayor emisión mundial en ese año
-    sectores_top = df_sector.groupby("Sector")[selected_year].sum().nlargest(3).index.tolist()
-    
+    sectores_ordenados = df_sector.groupby("Sector")[selected_year].sum().sort_values(ascending=True).index.tolist()  
+
     data_list = []
-    for sector in sectores_top:
+    for sector in sectores_ordenados:
         emision_pais = df_sector[(df_sector["ISOcode"] == iso_code) & (df_sector["Sector"] == sector)][selected_year].sum()
         emision_total_mundo = df_sector[df_sector["Sector"] == sector][selected_year].sum()
         
