@@ -68,27 +68,9 @@ app.layout = html.Div([
         "alignItems": "center", 
     }),
 
-    # SEPARADOR
     html.Div([
-        html.Hr(style={
-            'borderWidth': '1px',
-            'borderColor': BORDER_COLOR,
-            'margin': '50px 0',
-            'width': '100%',
-            'borderStyle': 'solid'
-        })
-    ]),
-
-    html.Div([
-        # Bloque del Treemap
         html.Div([
-            html.H4("Internal Sectoral Distribution", 
-                    style={"color": "white", "textAlign": "center", "fontSize": "18px"}),
-            dcc.Graph(id='treemap-sectores', style={"height": "400px"})
-        ], style={"backgroundColor": BORDER_COLOR, "padding": "20px", "borderRadius": "15px", "width": "50%"}),
-
-        html.Div([
-            html.H4("Emissions by Sector for Selected Country", 
+            html.H4("Historical Emissions by Sector for Selected Country", 
                     style={"color": "white", "textAlign": "center", "fontSize": "18px"}),
             dcc.Graph(
                 id='grafico-sectores',
@@ -100,22 +82,17 @@ app.layout = html.Div([
             "borderRadius": "10px",
             "padding": "10px",
             "width": "50%"
-        })
+        }),
+
+        html.Div([
+            html.H4("Internal Sectoral Distribution", 
+                    style={"color": "white", "textAlign": "center", "fontSize": "18px"}),
+            dcc.Graph(id='treemap-sectores', style={"height": "400px"})
+        ], style={"backgroundColor": BORDER_COLOR, "padding": "20px", "borderRadius": "15px", "width": "50%"})
 
     ], style={
         "display": "flex", "flexDirection": "row", "gap": "20px", "marginTop": "20px", "width": "100%"
     }),
-
-    # SEPARADOR
-    html.Div([
-        html.Hr(style={
-            'borderWidth': '1px',
-            'borderColor': BORDER_COLOR,
-            'margin': '50px 0',
-            'width': '100%',
-            'borderStyle': 'solid'
-        })
-    ]),
 
     html.Div([
         html.Div([
@@ -127,36 +104,38 @@ app.layout = html.Div([
         "display": "flex", "marginTop": "20px", "width": "100%"
     }),
 
-    # SEPARADOR
-    html.Div([
-        html.Hr(style={
-            'borderWidth': '1px',
-            'borderColor': BORDER_COLOR,
-            'margin': '50px 0',
-            'width': '100%',
-            'borderStyle': 'solid'
-        })
-    ]),
-
+    # NUEVA FILA: COMPARATIVA DE TENDENCIAS (Ranking y Evolución)
     html.Div([
         html.Div([
-            html.H4("Top 5 Countries with Highest Historical CO₂", style={"textAlign": "center", "color": "white", "fontSize": "18px"}),
-            dcc.Graph(id="pie-chart", figure=fig_pie, style={"height": "45vh"})
-        ], style={"flex": "1", "backgroundColor": BORDER_COLOR}),
+            html.H4("Compare Country Trends", style={"color": "white", "textAlign": "center"}),
+            dcc.Dropdown(
+                id='multi-country-dropdown',
+                options=[{'label': c, 'value': c} for c in df['Country'].unique()],
+                value=['Spain and Andorra', 'China', 'United States'], # Valores iniciales para la comparativa
+                multi=True,
+                style={"backgroundColor": "#1a2634", "color": "black"}
+            ),
+            dcc.Graph(id='trend-comparison-graph', style={"height": "400px"})
+        ], style={"flex": "2", "backgroundColor": BORDER_COLOR, "padding": "20px", "borderRadius": "15px"}),
 
         html.Div([
-            html.H4("Top 5 Countries with Highest CO₂ per Capita", style={"textAlign": "center", "color": "white", "fontSize": "18px"}),
-            dcc.Graph(id="pie-chart-capita", figure=fig_pie_capita, style={"height": "45vh"})
-        ], style={"flex": "1", "backgroundColor": BORDER_COLOR}),
-    ], style={
-        "display": "flex",
-        "flexDirection": "row",
-        "justifyContent": "space-between",
-        "gap": "20px",
-        "width": "100%",
-        "backgroundColor": BORDER_COLOR,
-        "BorderRadius": "10px",
-    })
+            html.H4("Yearly Statistical Summary", style={"color": "white", "textAlign": "center"}),
+            html.Div(id='summary-table-container') # Aquí inyectaremos una tabla dinámica
+        ], style={"flex": "1", "backgroundColor": BORDER_COLOR, "padding": "20px", "borderRadius": "15px"})
+    ], style={"display": "flex", "flexDirection": "row", "gap": "20px", "marginTop": "20px"}),
+
+    # FILA DE PIE CHARTS (Ahora serán dinámicos por año)
+    html.Div([
+        html.Div([
+            html.H4("Top 5 Emitters by Year", style={"textAlign": "center", "color": "white"}),
+            dcc.Graph(id="pie-chart-dynamic", style={"height": "45vh"})
+        ], style={"flex": "1", "backgroundColor": BORDER_COLOR, "borderRadius": "10px", "padding": "10px"}),
+
+        html.Div([
+            html.H4("Top 5 Per Capita by Year", style={"textAlign": "center", "color": "white"}),
+            dcc.Graph(id="pie-chart-capita-dynamic", style={"height": "45vh"})
+        ], style={"flex": "1", "backgroundColor": BORDER_COLOR, "borderRadius": "10px", "padding": "10px"}),
+    ], style={"display": "flex", "gap": "20px", "width": "100%"})
 
 ], style={"backgroundColor": BACKGROUND_COLOR, "padding": "20px"})
 
@@ -389,6 +368,109 @@ def update_bar_comparison(clickData, selected_year):
     )
     
     return fig
+
+@app.callback(
+    Output('trend-comparison-graph', 'figure'),
+    Input('multi-country-dropdown', 'value')
+)
+def update_trend_comparison(selected_countries):
+    # Filtramos el dataframe original por los países seleccionados
+    df_multi = df[df['Country'].isin(selected_countries)]
+    df_long = df_multi.melt(id_vars=["Country"], value_vars=columnas_años, var_name="Year", value_name="Emissions")
+    
+    fig = px.line(df_long, x="Year", y="Emissions", color="Country", template="plotly_dark",
+                 title="Historical Trend Comparison (Per Capita)")
+    fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', yaxis_title="t CO₂/cap")
+    return fig
+
+@app.callback(
+    Output('summary-table-container', 'children'),
+    Input('year-slider', 'value')
+)
+def update_summary_table(selected_year):
+    # Calculamos métricas sobre el DataFrame per cápita (df)
+    avg_val = df[selected_year].mean()
+    max_val = df[selected_year].max()
+    max_country = df.loc[df[selected_year].idxmax(), 'Country']
+    
+    # Construcción de la tabla con estilo CSS para que encaje en el diseño oscuro
+    return html.Table([
+        html.Thead(html.Tr([html.Th("Metric"), html.Th("Value")], style={"borderBottom": "2px solid #555"})),
+        html.Tbody([
+            html.Tr([html.Td("Global Average"), html.Td(f"{avg_val:.2f} t/cap")]),
+            html.Tr([html.Td("Top Emitter"), html.Td(f"{max_country}")]),
+            html.Tr([html.Td("Peak Emission"), html.Td(f"{max_val:.2f} t/cap")]),
+        ])
+    ], style={"color": "white", "width": "100%", "marginTop": "20px", "textAlign": "left", "fontSize": "14px"})
+
+from plotly.subplots import make_subplots
+
+@app.callback(
+    [Output("pie-chart-dynamic", "figure"),
+     Output("pie-chart-capita-dynamic", "figure")],
+    Input("year-slider", "value")
+)
+def update_dynamic_rankings(selected_year):
+    def create_ranked_pie(dataframe, val_col):
+        # 1. Preparar datos: Top 5 + Others
+        full_rank = dataframe.sort_values(by=val_col, ascending=False)
+        top5 = full_rank.head(5)
+        others_val = full_rank.iloc[5:][val_col].sum()
+        
+        # Combinamos para el gráfico
+        df_pie = pd.concat([
+            top5, 
+            pd.DataFrame({"Country": ["Others"], val_col: [others_val]})
+        ])
+
+        # 2. Crear Subplots: Tabla (Ranking) + Pie
+        fig = make_subplots(
+            rows=1, cols=2, 
+            column_widths=[0.4, 0.6],
+            specs=[[{"type": "table"}, {"type": "pie"}]]
+        )
+
+        # Añadir Tabla de Ranking
+        fig.add_trace(
+            go.Table(
+                header=dict(values=["Ranking", "Country", "Value"], fill_color='#1a2634', align='left', font=dict(color='white', size=11)),
+                cells=dict(values=[[1,2,3,4,5], top5["Country"], top5[val_col].round(2)], fill_color='#101925', align='left', font=dict(color='white', size=10))
+            ),
+            row=1, col=1
+        )
+
+        # Añadir Pie Chart
+        fig.add_trace(
+            go.Pie(
+                labels=df_pie["Country"], 
+                values=df_pie[val_col],
+                hole=0.5,
+                textinfo='label+percent', # Nombre del país + porcentaje
+                insidetextorientation='radial',
+                marker=dict(colors=px.colors.qualitative.Pastel)
+            ),
+            row=1, col=2
+        )
+
+        fig.update_layout(
+            title=dict(
+                text=f"({selected_year})",
+                x=0.5, font=dict(size=14, color="white")
+            ),
+            paper_bgcolor='rgba(0,0,0,0)',
+            showlegend=False,
+            margin=dict(l=10, r=10, t=50, b=10)
+        )
+        return fig
+
+    # Gráfico 1: Emisiones Totales (desde df_sector)
+    df_total = df_sector.groupby("Country")[selected_year].sum().reset_index()
+    fig1 = create_ranked_pie(df_total, selected_year)
+
+    # Gráfico 2: Emisiones Per Capita (desde df)
+    fig2 = create_ranked_pie(df, selected_year)
+    
+    return fig1, fig2
 
 if __name__ == "__main__":
     app.run(host="127.0.0.1", port=8050, debug=False)
