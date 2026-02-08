@@ -61,7 +61,14 @@ app.layout = html.Main(
                         min=min_year,
                         max=max_year,
                         value=2000,
-                        marks={str(y): str(y) for y in years if y % 5 == 0},
+                        marks={
+                                str(y): {
+                                    "label": str(y),
+                                    "style": {"color": "var(--text-main)"}
+                                }
+                                for y in years
+                                if y % 5 == 0
+                            },
                         step=1,
                         updatemode="drag",
                     ),
