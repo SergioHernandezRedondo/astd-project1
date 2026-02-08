@@ -1,0 +1,149 @@
+/* --- Theme Variables --- */
+:root {
+    --bg-page: #f0f2f5;
+    --bg-card: #ffffff;
+    --text-main: #1a1a1a;
+    --border: #dcdde1;
+    --header-bg: #ffffff;
+}
+
+#main-container[data-theme="dark"] {
+    --bg-page: #0f0f0f;
+    --bg-card: #1a1a1a;
+    --text-main: #f5f6fa;
+    --border: #2f3640;
+    --header-bg: #1a1a1a;
+}
+
+/* --- Global Reset & Text Visibility --- */
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    background-color: var(--bg-page);
+}
+
+/* Force text colors across themes */
+#main-container, h1, h2, h3, p, label, span {
+    color: var(--text-main) !important;
+    transition: background-color 0.2s;
+}
+
+#main-container {
+    min-height: 100vh;
+    padding: 1.5rem;
+    max-width: 1400px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    background-color: var(--bg-page);
+}
+
+/* --- Sticky Header --- */
+header {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    background-color: var(--header-bg);
+    padding: 1rem 1.5rem;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+}
+
+.header-top-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* --- General Row Sections --- */
+section {
+    display: flex;
+    flex-direction: row;
+    gap: 1.5rem;
+    width: 100%; /* Prevents row collapse */
+}
+
+/* Card Style for Standard Charts */
+section > div {
+    flex: 1 1 100%; 
+    width: 100%;
+    min-width: 0; /* Critical for Plotly resizing */
+    background-color: var(--bg-card);
+    padding: 1.5rem;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    height: 550px;
+    display: flex;
+    flex-direction: column;
+}
+
+/* --- Global Comparison Section (The Fixed Card) --- */
+#comparison-section {
+    display: flex;
+    flex-direction: column !important;
+    width: 100% !important; /* Force full width to prevent 'plano' look */
+    flex: 0 0 auto; /* Do not shrink or grow unexpectedly */
+    background-color: var(--bg-card);
+    padding: 1.5rem;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    gap: 0.75rem;
+    min-height: 600px; /* Ensure a base height even while loading */
+}
+
+/* Ensure inner divs don't break the parent layout */
+#comparison-section > div {
+    width: 100% !important;
+    height: auto;
+    background: transparent;
+    border: none;
+    padding: 0;
+}
+
+/* Graph container inside comparison */
+#sector-comparison-graph {
+    height: 500px !important;
+    width: 100% !important;
+}
+
+/* --- Map Height Adjustment --- */
+#choropleth-map {
+    height: 600px !important;
+}
+
+section:has(#choropleth-map) > div {
+    height: 650px;
+}
+
+/* --- Plotly Responsibility Fix --- */
+.dash-graph, .js-plotly-plot, .plot-container {
+    width: 100% !important;
+    height: 100% !important;
+    flex-grow: 1;
+}
+
+/* --- Dropdown Styling --- */
+.Select-control, .Select-menu-outer {
+    background-color: var(--bg-card) !important;
+    border-color: var(--border) !important;
+}
+
+.Select-value-label, .Select-placeholder, .Select-input > input {
+    color: var(--text-main) !important;
+}
+
+/* --- Responsive Layout --- */
+@media (max-width: 1100px) {
+    section {
+        flex-direction: column;
+    }
+    section > div {
+        height: 450px;
+    }
+}

@@ -43,7 +43,7 @@ app.layout = html.Main(
             [
                 html.Div(
                     [
-                        html.H1(id="dynamic-title", style={"margin": "0"}),
+                        html.H1(id="dynamic-title"),
                         dcc.Checklist(
                             id="theme-switch",
                             options=[{"label": "🌙 Dark Mode", "value": "dark"}],
@@ -107,7 +107,7 @@ app.layout = html.Main(
         html.Section(
             id="comparison-section",
             children=[
-                html.H2("Global Sectoral Comparison", style={"textAlign": "center"}),
+                html.H2("Global Sectoral Comparison"),
                 # Now only containing the Country selector
                 html.Div(
                     [
@@ -120,7 +120,6 @@ app.layout = html.Main(
                             placeholder="Search for countries...",
                         ),
                     ],
-                    style={"maxWidth": "800px", "margin": "0 auto", "width": "100%"},
                 ),
                 dcc.Graph(
                     id="sector-comparison-graph",
