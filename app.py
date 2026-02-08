@@ -56,7 +56,6 @@ app.layout = html.Main(
                     ],
                     className="header-top-row",
                 ),
-                # Slider container (height: auto)
                 html.Div(
                     dcc.Slider(
                         id="year-slider",
@@ -1150,13 +1149,11 @@ def update_trend_comparison(dropdown_countries, global_data):
             paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)"
         )
 
-    # --- CAMBIO IMPORTANTE: Usamos df_totals en vez de df ---
     df_multi = df_totals[df_totals["Country"].isin(countries)]
     
-    # Derretimos (melt) el dataframe de totales
     df_long = df_multi.melt(
         id_vars=["Country"],
-        value_vars=columns_years, # Usamos las mismas columnas de años
+        value_vars=columns_years, 
         var_name="Year",
         value_name="Emissions",
     )
@@ -1166,7 +1163,7 @@ def update_trend_comparison(dropdown_countries, global_data):
         x="Year",
         y="Emissions",
         color="Country",
-        title="Historical Trend Comparison (Total Emissions)", # Título actualizado
+        title="Historical Trend Comparison (Total Emissions)",
         color_discrete_sequence=px.colors.qualitative.Safe,
     )
 
@@ -1184,11 +1181,10 @@ def update_trend_comparison(dropdown_countries, global_data):
         ),
         yaxis=dict(
             gridcolor=colors["grid"],
-            title="Mt CO₂",  # Unidad cambiada a Megatoneladas (Totales)
+            title="Mt CO₂",
             showline=True,
             linecolor=colors["grid"],
         ),
-        # Leyenda arreglada para que no tape el eje X
         legend=dict(
             orientation="h",
             yanchor="top",
