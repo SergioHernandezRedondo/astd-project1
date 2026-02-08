@@ -24,29 +24,31 @@ Year columns: Numerical values representing CO₂ emissions for each year (1970-
 
 ## Project structure
 
-
-├── .idea/
-
-│   └── IDE configuration files
-
-├── data/
-
-│   └── CO2.xlsx              # Dataset provided by ALLSTAT
-
-├── main/
-
-│   └── source/
-
-│       ├── utils/
-
-│       │   └── utility functions for data processing and statistics
-
-│       └── app.py            # Main Dash application
-
-├── guide.md                  # Usage and navigation guide for the dashboard
-
-└── README.md                 # Project documentation
-
+```
+.
+├── app.py
+├── assets
+│   └── styles.css
+├── astd-venv
+│   ├── bin
+│   ├── etc
+│   ├── include
+│   ├── lib
+│   ├── lib64 -> lib
+│   ├── pyvenv.cfg
+│   └── share
+├── data
+│   └── CO2.xlsx
+├── guide.md
+├── main
+│   └── source
+├── README.md
+├── requeriments.txt
+└── utils
+    ├── figures.py
+    ├── __pycache__
+    └── utils.py
+```
 
 ## How to run the environment
 
