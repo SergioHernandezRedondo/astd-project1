@@ -7,6 +7,8 @@ This project presents an interactive data visualization dashboard for the analys
 
 The main objective of the project is to enable an intuitive exploration of spatio-temporal CO₂ emission patterns, including comparisons by country, sector, and year. Through interactive maps, charts, and comparative visualizations, the dashboard allows users to identify trends, disparities, and key contributors to global CO₂ emissions.
 
+The dashboard offers a fully synchronized experience: by selecting a specific country on the map and adjusting the year slider, all charts update instantly to reflect that selection. This allows you to perform a deep-dive analysis of a nation's carbon footprint, comparing its sectoral distribution and historical trends against global benchmarks in real-time.
+
 
 ## Dataset Description
 
@@ -26,32 +28,15 @@ Year columns: Numerical values representing CO₂ emissions for each year (1970-
 
 ```
 .
-├── app.py
-├── assets
-│   └── styles.css
-├── astd-venv
-│   ├── bin
-│   ├── etc
-│   ├── include
-│   ├── lib
-│   ├── lib64 -> lib
-│   ├── pyvenv.cfg
-│   └── share
-├── data
-│   └── CO2.xlsx
-├── guide.md
-├── main
-│   └── source
-├── README.md
-├── requeriments.txt
-└── utils
-    ├── figures.py
-    ├── __pycache__
-    └── utils.py
+├── app.py              # Main Dash application entry point
+├── assets/             # CSS styles and static images
+├── data/               # Source dataset (CO2.xlsx)
+├── utils/              # Helper functions for data processing and themes
+├── requirements.txt    # Project dependencies
+└── README.md           # Documentation
 ```
 
 ## How to run the environment
-
 
 
 This project is developed in Python and uses Dash to create an interactive web dashboard. To run the application locally, follow the steps below.
@@ -104,7 +89,7 @@ pip install pandas numpy dash plotly
 
 Navigate to the source directory and start the application:
 ```bash
-python main/source/app.py
+python app.py
 ```
 5. Access the dashboard
 
