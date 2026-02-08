@@ -1,11 +1,19 @@
 import pandas as pd
 
-def open_totals_country(path = "../../data/CO2.xlsx", name = "fossil_CO2_totals_by_country"):
+
+def open_totals_country(
+    path="../../data/CO2.xlsx", name="fossil_CO2_totals_by_country"
+):
     return pd.read_excel(path, sheet_name=name)
-def open_capita(path = "../../data/CO2.xlsx", name ="fossil_CO2_per_capita_by_countr"):
+
+
+def open_capita(path="../../data/CO2.xlsx", name="fossil_CO2_per_capita_by_countr"):
     return pd.read_excel(path, sheet_name=name)
-def open_sector(path = "../../data/CO2.xlsx", name = "fossil_CO2_by_sector_and_countr"):
+
+
+def open_sector(path="../../data/CO2.xlsx", name="fossil_CO2_by_sector_and_countr"):
     return pd.read_excel(path, sheet_name=name)
+
 
 def sum_co2_countries(path, sheet_name):
     """
@@ -19,6 +27,7 @@ def sum_co2_countries(path, sheet_name):
 
     return pd.concat([names, suma.rename("suma")], axis=1)
 
+
 def sum_co2_all_countries(path, sheet_name):
     """
     Suma toda la contaminación de todos los paises en todos los años
@@ -27,7 +36,8 @@ def sum_co2_all_countries(path, sheet_name):
     df = sum_co2_countries(path, sheet_name)
     return df["suma"].sum()
 
-def get_top5_countries(path, sheet_name = "fossil_CO2_totals_by_country"):
+
+def get_top5_countries(path, sheet_name="fossil_CO2_totals_by_country"):
     """
     Selecciona los 5 paises con más contaminación histórica, también añade otra fila con los demás países
     :return: DataFrame de los 5 paises con su contaminacion y los otros
@@ -43,7 +53,8 @@ def get_top5_countries(path, sheet_name = "fossil_CO2_totals_by_country"):
 
     new_line = pd.DataFrame({"Country": ["Others"], "suma": [others]})
 
-    return pd.concat([top5, new_line], ignore_index = True)
+    return pd.concat([top5, new_line], ignore_index=True)
+
 
 def get_years(df):
     columns = df.columns.to_list()
@@ -63,7 +74,8 @@ def get_years(df):
         exit(1)
     return min_year, max_year, years
 
-def get_max_min_emission(path, sheet_name = "fossil_CO2_totals_by_country"):
+
+def get_max_min_emission(path, sheet_name="fossil_CO2_totals_by_country"):
     df = open_totals_country(path, name=sheet_name)
     _, _, years = get_years(df)
     min_value = max_value = df[years[1]][0]
@@ -77,3 +89,21 @@ def get_max_min_emission(path, sheet_name = "fossil_CO2_totals_by_country"):
         if max_y > max_value:
             max_value = max_y
     return min_value, max_value
+
+
+def get_theme_colors(theme):
+    """Returns a dictionary with colors based on the selected theme."""
+    if theme == "dark":
+        return {
+            "template": "plotly_dark",
+            "text": "#ecf0f1",  # Light grey text
+            "grid": "#333333",  # Dark grey lines
+            "bg": "rgba(0,0,0,0)",  # Transparent background
+        }
+    else:
+        return {
+            "template": "plotly_white",
+            "text": "#2d3436",  # Dark grey text
+            "grid": "#dfe6e9",  # Light grey lines
+            "bg": "rgba(0,0,0,0)",  # Transparent background
+        }
