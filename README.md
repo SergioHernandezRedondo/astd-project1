@@ -114,16 +114,3 @@ http://127.0.0.1:8050
 The interactive dashboard will be displayed, allowing exploration of CO₂ emissions by country, sector, and year.
 ## Dashboard Features
 
-## Minimum requirements
-
-1. Exploration/visualization of the data.
-  1. All the data must be visualized/explored somehow.
-  2. At least three different types of graphics must be used.
-  3. At least one non-basic graphic must be used (histograms, scatter-plots, pie-charts, box-plots etc. are basic).
-
-2. Compilation of results.
-  1. All results (tables, graphics, etc.) must be shown in a dashboard.
-
-## Deadline
-
-**February 08th 2026 at 23:55 via eGELA**
