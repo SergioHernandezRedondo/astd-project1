@@ -5,7 +5,8 @@ import plotly.express as px
 import plotly.graph_objects as go
 import numpy as np
 import os
-from utils.utils import get_max_min_emission, get_years
+from utils.utils import get_max_min_emission, get_years, get_theme_colors
+from plotly.subplots import make_subplots
 
 CSV_PATH = os.path.join("data", "CO2.xlsx")
 
@@ -126,6 +127,35 @@ app.layout = html.Main(
                     responsive=True,
                     config={"displayModeBar": False},
                 ),
+            ],
+        ),
+        html.Section(
+            children=[
+                html.Div(
+                    [
+                        html.H4("Top 5 Emitters by Year"),
+                        dcc.Graph(id="pie-chart-dynamic"),
+                    ],
+                ),
+                html.Div(
+                    [
+                        html.H4("Top 5 Per Capita by Year"),
+                        dcc.Graph(id="pie-chart-capita-dynamic"),
+                    ],
+                ),
+            ]
+        ),
+        html.Section(
+            id="trend-section",
+            children=[
+                html.H4("Compare Country Trends"),
+                dcc.Dropdown(
+                    id="multi-country-dropdown",
+                    options=[{"label": c, "value": c} for c in df["Country"].unique()],
+                    value=[],
+                    multi=True,
+                ),
+                dcc.Graph(id="trend-comparison-graph"),
             ],
         ),
     ],
@@ -429,6 +459,175 @@ def update_sector_graph(dropdown_countries, year, theme_value, global_data):
         ),
         # Smooth bar transitions on slider move
         transition_duration=500,
+    )
+
+    return fig
+
+
+@app.callback(
+    [
+        Output("pie-chart-dynamic", "figure"),
+        Output("pie-chart-capita-dynamic", "figure"),
+    ],
+    [Input("year-slider", "value"), Input("session-storage", "data")],
+)
+def update_dynamic_rankings(selected_year, session_data):
+    # Get colors from the shared theme logic
+    theme = session_data.get("theme", "light")
+    colors = get_theme_colors(theme)
+
+    def create_ranked_pie(dataframe, val_col):
+        # 1. Data Preparation: Top 5 + Others
+        full_rank = dataframe.sort_values(by=val_col, ascending=False)
+        top5 = full_rank.head(5)
+        others_val = full_rank.iloc[5:][val_col].sum()
+
+        df_pie = pd.concat(
+            [top5, pd.DataFrame({"Country": ["Others"], val_col: [others_val]})]
+        )
+
+        # 2. Subplots Setup: Table + Donut
+        fig = make_subplots(
+            rows=1,
+            cols=2,
+            column_widths=[0.35, 0.65],
+            specs=[[{"type": "table"}, {"type": "pie"}]],
+            horizontal_spacing=0.05,
+        )
+
+        # Ranking Table
+        fig.add_trace(
+            go.Table(
+                header=dict(
+                    values=["<b>Rank</b>", "<b>Country</b>"],
+                    fill_color=colors["grid"],
+                    align="left",
+                    font=dict(color=colors["text"], size=12),
+                    line_color=colors["grid"],
+                ),
+                cells=dict(
+                    values=[[1, 2, 3, 4, 5], top5["Country"]],
+                    fill_color="rgba(0,0,0,0)",
+                    align="left",
+                    font=dict(color=colors["text"], size=11),
+                    line_color=colors["grid"],
+                    height=25,
+                ),
+            ),
+            row=1,
+            col=1,
+        )
+
+        # Donut Chart
+        fig.add_trace(
+            go.Pie(
+                labels=df_pie["Country"],
+                values=df_pie[val_col],
+                hole=0.5,
+                textinfo="percent",
+                hoverinfo="label+value+percent",
+                marker=dict(line=dict(color=colors["bg"], width=2)),
+                showlegend=True,
+            ),
+            row=1,
+            col=2,
+        )
+
+        fig.update_layout(
+            template=colors["template"],
+            paper_bgcolor="rgba(0,0,0,0)",
+            plot_bgcolor="rgba(0,0,0,0)",
+            font_color=colors["text"],
+            margin=dict(l=0, r=0, t=30, b=0),
+            legend=dict(
+                orientation="h", yanchor="bottom", y=-0.1, xanchor="center", x=0.5
+            ),
+        )
+        return fig
+
+    # Global Emissions Figure
+    df_total = df_sector.groupby("Country")[selected_year].sum().reset_index()
+    fig1 = create_ranked_pie(df_total, selected_year)
+
+    # Per Capita Figure
+    fig2 = create_ranked_pie(df, selected_year)
+
+    return fig1, fig2
+
+
+@app.callback(
+    Output("trend-comparison-graph", "figure"),
+    [
+        Input("multi-country-dropdown", "value"),
+        Input("session-storage", "data"),
+    ],
+)
+def update_trend_comparison(dropdown_countries, global_data):
+    # 1. Get dynamic theme colors (using your existing helper)
+    theme = global_data.get("theme", "light")
+    colors = get_theme_colors(theme)
+
+    # 2. Get country from map selection (Global Sync)
+    map_country = global_data.get("country")
+
+    # 3. Merge dropdown selection with map selection (Same logic as your Sector graph)
+    countries = list(dropdown_countries) if dropdown_countries else []
+    if map_country and map_country not in countries:
+        countries.insert(0, map_country)
+
+    if not countries:
+        return go.Figure()
+
+    # 4. Filter and reshape data
+    df_multi = df[df["Country"].isin(countries)]
+    df_long = df_multi.melt(
+        id_vars=["Country"],
+        value_vars=columns_years,
+        var_name="Year",
+        value_name="Emissions",
+    )
+
+    # 5. Create Line Plot
+    fig = px.line(
+        df_long,
+        x="Year",
+        y="Emissions",
+        color="Country",
+        title="Historical Trend Comparison (Per Capita)",
+        color_discrete_sequence=px.colors.qualitative.Safe,
+    )
+
+    # 6. Clean styling
+    fig.update_layout(
+        template=colors["template"],
+        paper_bgcolor=colors["bg"],
+        plot_bgcolor=colors["bg"],
+        font_color=colors["text"],
+        xaxis=dict(
+            gridcolor=colors["grid"],
+            showline=True,
+            linecolor=colors["grid"],
+            tickangle=45,
+        ),
+        yaxis=dict(
+            gridcolor=colors["grid"],
+            title="t CO₂/cap",
+            showline=True,
+            linecolor=colors["grid"],
+        ),
+        # Horizontal legend at the bottom for a clean look
+        legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            y=-0.3,
+            xanchor="center",
+            x=0.5,
+            bgcolor="rgba(0,0,0,0)",
+            title=None,
+        ),
+        margin=dict(l=40, r=20, t=60, b=80),
+        hovermode="x unified",
+        transition_duration=500,  # Smooth transitions like your Sector graph
     )
 
     return fig

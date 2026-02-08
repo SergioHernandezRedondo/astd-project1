@@ -89,3 +89,21 @@ def get_max_min_emission(path, sheet_name="fossil_CO2_totals_by_country"):
         if max_y > max_value:
             max_value = max_y
     return min_value, max_value
+
+
+def get_theme_colors(theme):
+    """Returns a dictionary with colors based on the selected theme."""
+    if theme == "dark":
+        return {
+            "template": "plotly_dark",
+            "text": "#ecf0f1",  # Light grey text
+            "grid": "#333333",  # Dark grey lines
+            "bg": "rgba(0,0,0,0)",  # Transparent background
+        }
+    else:
+        return {
+            "template": "plotly_white",
+            "text": "#2d3436",  # Dark grey text
+            "grid": "#dfe6e9",  # Light grey lines
+            "bg": "rgba(0,0,0,0)",  # Transparent background
+        }
