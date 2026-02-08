@@ -47,8 +47,71 @@ Year columns: Numerical values representing CO₂ emissions for each year (1970-
 
 └── README.md                 # Project documentation
 
-The dashboard is developed using Dash, a Python framework designed for creating interactive data visualization web applications.
 
+## How to run the environment
+
+
+
+This project is developed in Python and uses Dash to create an interactive web dashboard. To run the application locally, follow the steps below.
+
+1. Create a virtual environment
+
+From the root directory of the project, create a Python virtual environment to isolate dependencies:
+
+```bash
+python -m venv .venv
+```
+2. Activate the virtual environment
+
+Activate the environment depending on your operating system:
+
+Windows (CMD / PowerShell):
+```bash
+.venv\Scripts\activate
+```
+
+Linux / macOS:
+```bash
+source .venv/bin/activate
+```
+
+Once activated, the terminal prompt will show the name of the environment, indicating that it is active.
+
+3. Install project dependencies
+
+With the virtual environment activated, install the required Python packages:
+```bash
+pip install -r requirements.txt
+```
+
+If a requirements.txt file is not provided, the main dependencies are:
+
+pandas
+
+numpy
+
+dash
+
+plotly
+
+These can be installed manually using:
+```bash
+pip install pandas numpy dash plotly
+```
+4. Run the Dash application
+
+Navigate to the source directory and start the application:
+```bash
+python main/source/app.py
+```
+5. Access the dashboard
+
+Once the application is running, open a web browser and go to:
+
+http://127.0.0.1:8050
+
+
+The interactive dashboard will be displayed, allowing exploration of CO₂ emissions by country, sector, and year.
 ## Dashboard Features
 
 ## Minimum requirements
