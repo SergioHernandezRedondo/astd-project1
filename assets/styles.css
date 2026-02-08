@@ -46,7 +46,7 @@ body {
 /* --- Sticky Header --- */
 header {
     position: sticky;
-    top: 0;
+    top: 0.5rem;
     z-index: 1000;
     background-color: var(--header-bg);
     padding: 1rem 1.5rem;

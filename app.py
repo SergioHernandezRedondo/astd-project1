@@ -109,16 +109,15 @@ app.layout = html.Main(
             id="comparison-section",
             children=[
                 html.H2("Global Sectoral Comparison"),
-                # Now only containing the Country selector
                 html.Div(
                     [
                         html.Label("Select Countries to Compare:"),
                         dcc.Dropdown(
                             id="sector-countries-dropdown",
                             options=country_options,
-                            value=[country_options[0]["value"]],
+                            value=[],
                             multi=True,
-                            placeholder="Search for countries...",
+                            placeholder="Select or search countries to compare...",
                         ),
                     ],
                 ),
@@ -133,13 +132,11 @@ app.layout = html.Main(
             children=[
                 html.Div(
                     [
-                        html.H4("Top 5 Emitters by Year"),
                         dcc.Graph(id="pie-chart-dynamic"),
                     ],
                 ),
                 html.Div(
                     [
-                        html.H4("Top 5 Per Capita by Year"),
                         dcc.Graph(id="pie-chart-capita-dynamic"),
                     ],
                 ),
@@ -148,12 +145,13 @@ app.layout = html.Main(
         html.Section(
             id="trend-section",
             children=[
-                html.H4("Compare Country Trends"),
+                html.H2("Compare Country Trends"),
                 dcc.Dropdown(
                     id="multi-country-dropdown",
                     options=[{"label": c, "value": c} for c in df["Country"].unique()],
                     value=[],
                     multi=True,
+                    placeholder="Select or search countries to compare...",
                 ),
                 dcc.Graph(id="trend-comparison-graph"),
             ],
@@ -472,12 +470,12 @@ def update_sector_graph(dropdown_countries, year, theme_value, global_data):
     [Input("year-slider", "value"), Input("session-storage", "data")],
 )
 def update_dynamic_rankings(selected_year, session_data):
-    # Get colors from the shared theme logic
+    # 1. Get dynamic theme colors
     theme = session_data.get("theme", "light")
     colors = get_theme_colors(theme)
 
-    def create_ranked_pie(dataframe, val_col):
-        # 1. Data Preparation: Top 5 + Others
+    def create_ranked_pie(dataframe, val_col, title_main):
+        # 2. Data Preparation: Top 5 + Others
         full_rank = dataframe.sort_values(by=val_col, ascending=False)
         top5 = full_rank.head(5)
         others_val = full_rank.iloc[5:][val_col].sum()
@@ -486,7 +484,7 @@ def update_dynamic_rankings(selected_year, session_data):
             [top5, pd.DataFrame({"Country": ["Others"], val_col: [others_val]})]
         )
 
-        # 2. Subplots Setup: Table + Donut
+        # 3. Subplots Setup: Table + Donut
         fig = make_subplots(
             rows=1,
             cols=2,
@@ -533,24 +531,38 @@ def update_dynamic_rankings(selected_year, session_data):
             col=2,
         )
 
+        # 4. Clean styling with Dynamic Title
         fig.update_layout(
+            title=dict(
+                text=f"<b>{title_main}</b><br><sup>Year: {selected_year}</sup>",
+                x=0.05,
+                y=0.95,
+                font=dict(size=16, color=colors["text"]),
+            ),
             template=colors["template"],
             paper_bgcolor="rgba(0,0,0,0)",
             plot_bgcolor="rgba(0,0,0,0)",
             font_color=colors["text"],
-            margin=dict(l=0, r=0, t=30, b=0),
+            margin=dict(l=10, r=10, t=80, b=10),
             legend=dict(
-                orientation="h", yanchor="bottom", y=-0.1, xanchor="center", x=0.5
+                orientation="h",
+                yanchor="bottom",
+                y=-0.1,
+                xanchor="center",
+                x=0.5,
+                bgcolor="rgba(0,0,0,0)",
             ),
         )
         return fig
 
-    # Global Emissions Figure
-    df_total = df_sector.groupby("Country")[selected_year].sum().reset_index()
-    fig1 = create_ranked_pie(df_total, selected_year)
+    # --- Generate Figures ---
 
-    # Per Capita Figure
-    fig2 = create_ranked_pie(df, selected_year)
+    # Total Emissions Figure (using df_sector)
+    df_total = df_sector.groupby("Country")[selected_year].sum().reset_index()
+    fig1 = create_ranked_pie(df_total, selected_year, "Top 5 Global Emitters")
+
+    # Per Capita Figure (using df)
+    fig2 = create_ranked_pie(df, selected_year, "Top 5 Per Capita Emitters")
 
     return fig1, fig2
 
