@@ -11,6 +11,7 @@ from plotly.subplots import make_subplots
 CSV_PATH = os.path.join("data", "CO2.xlsx")
 
 df = pd.read_excel(CSV_PATH, sheet_name="fossil_CO2_per_capita_by_countr")
+df_totals = pd.read_excel(CSV_PATH, sheet_name="fossil_CO2_totals_by_country")
 df_sector = pd.read_excel(CSV_PATH, sheet_name="fossil_CO2_by_sector_and_countr")
 
 columns = df.columns.to_list()
@@ -77,7 +78,7 @@ app.layout = html.Main(
                 ),
             ]
         ),
-        html.P("Select the country you wish to analyze."),
+        html.P("Select the country you wish to analyze"),
         # Map Section
         html.Section(
             [
@@ -89,15 +90,15 @@ app.layout = html.Main(
             [
                 html.Div(
                     [
-                        html.H2("Historical Emissions by Sector"),
-                        dcc.Graph(id="grafico-sectores", responsive=True),
+                        html.H2("Internal Sectoral Distribution"),
+                        dcc.Graph(id="treemap-sectores", responsive=True),
                     ],
                     className="card",
                 ),
                 html.Div(
                     [
-                        html.H2("Internal Sectoral Distribution"),
-                        dcc.Graph(id="treemap-sectores", responsive=True),
+                        html.H2("Historical Emissions by Sector"),
+                        dcc.Graph(id="grafico-sectores", responsive=True),
                     ],
                     className="card",
                 ),
@@ -261,7 +262,7 @@ def update_map(selected_year, global_data):
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
         coloraxis_colorbar=dict(
-            title="Tons",
+            title="t CO₂/cap",
             thicknessmode="pixels",
             thickness=15,
             lenmode="fraction",
@@ -644,7 +645,7 @@ app.layout = html.Main(
                 ),
             ]
         ),
-        html.P("You may click on different countries!"),
+        html.P("Select the country you wish to analyze."),
         # Map Section
         html.Section(
             [
@@ -663,7 +664,7 @@ app.layout = html.Main(
                 ),
                 html.Div(
                     [
-                        html.H2("Emissions by Sector"),
+                        html.H2("Historical Emissions by Sector"),
                         dcc.Graph(id="grafico-sectores", responsive=True),
                     ],
                     className="card",
@@ -671,18 +672,18 @@ app.layout = html.Main(
             ],
             className="grid-row",
         ),
-        # Global Comparison (Tall Card)
+
         html.Section(
             [
                 html.Div(
                     [
                         html.H2("Global Sectoral Comparison"),
-                        html.Label("Select Countries to Compare with:"),
                         dcc.Dropdown(
                             id="sector-countries-dropdown",
                             options=country_options,
                             value=[],
                             multi=True,
+                            placeholder="Select Countries to Compare with..."
                         ),
                         dcc.Graph(id="sector-comparison-graph", responsive=True),
                     ],
@@ -711,6 +712,7 @@ app.layout = html.Main(
                             ],
                             value=[],
                             multi=True,
+                            placeholder="Select Countries to Compare with..."
                         ),
                         dcc.Graph(id="trend-comparison-graph"),
                     ],
@@ -827,7 +829,7 @@ def update_map(selected_year, global_data):
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
         coloraxis_colorbar=dict(
-            title="Tons",
+            title="t CO₂/cap",
             thicknessmode="pixels",
             thickness=15,
             lenmode="fraction",
@@ -981,7 +983,6 @@ def update_sector_graph(dropdown_countries, year, global_data):
         countries.insert(0, map_country)
 
     if not countries:
-        # Return empty figure if no selection to avoid "Afghanistan" default
         fig = go.Figure()
         fig.update_layout(
             paper_bgcolor="rgba(0,0,0,0)",
@@ -1131,7 +1132,6 @@ def update_dynamic_rankings(selected_year, session_data):
 
     return fig1, fig2
 
-
 @app.callback(
     Output("trend-comparison-graph", "figure"),
     [Input("multi-country-dropdown", "value"), Input("session-storage", "data")],
@@ -1150,10 +1150,13 @@ def update_trend_comparison(dropdown_countries, global_data):
             paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)"
         )
 
-    df_multi = df[df["Country"].isin(countries)]
+    # --- CAMBIO IMPORTANTE: Usamos df_totals en vez de df ---
+    df_multi = df_totals[df_totals["Country"].isin(countries)]
+    
+    # Derretimos (melt) el dataframe de totales
     df_long = df_multi.melt(
         id_vars=["Country"],
-        value_vars=columns_years,
+        value_vars=columns_years, # Usamos las mismas columnas de años
         var_name="Year",
         value_name="Emissions",
     )
@@ -1163,16 +1166,16 @@ def update_trend_comparison(dropdown_countries, global_data):
         x="Year",
         y="Emissions",
         color="Country",
-        title="Historical Trend Comparison (Per Capita)",
+        title="Historical Trend Comparison (Total Emissions)", # Título actualizado
         color_discrete_sequence=px.colors.qualitative.Safe,
     )
 
     fig.update_layout(
-        title=dict(font=dict(color="#7f8c8d", size=16)),  # Grey title
+        title=dict(font=dict(color="#7f8c8d", size=16)),
         template=colors["template"],
         paper_bgcolor=colors["bg"],
         plot_bgcolor=colors["bg"],
-        font_color="#7f8c8d",  # Grey labels/legend
+        font_color="#7f8c8d",
         xaxis=dict(
             gridcolor=colors["grid"],
             showline=True,
@@ -1181,19 +1184,20 @@ def update_trend_comparison(dropdown_countries, global_data):
         ),
         yaxis=dict(
             gridcolor=colors["grid"],
-            title="t CO₂/cap",
+            title="Mt CO₂",  # Unidad cambiada a Megatoneladas (Totales)
             showline=True,
             linecolor=colors["grid"],
         ),
+        # Leyenda arreglada para que no tape el eje X
         legend=dict(
             orientation="h",
-            yanchor="bottom",
-            y=-0.4,
+            yanchor="top",
+            y=-0.25,
             xanchor="center",
             x=0.5,
             title=None,
         ),
-        margin=dict(l=40, r=20, t=60, b=80),
+        margin=dict(l=40, r=20, t=60, b=120),
         hovermode="x unified",
         transition_duration=500,
     )
