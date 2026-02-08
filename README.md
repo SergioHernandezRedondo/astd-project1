@@ -73,13 +73,12 @@ pip install -r requirements.txt
 
 If a requirements.txt file is not provided, the main dependencies are:
 
+```
 pandas
-
 numpy
-
 dash
-
 plotly
+```
 
 These can be installed manually using:
 ```bash
