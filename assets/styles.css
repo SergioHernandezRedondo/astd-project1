@@ -94,7 +94,7 @@ section > div {
     border-radius: 12px;
     border: 1px solid var(--border);
     gap: 0.75rem;
-    min-height: 600px; /* Ensure a base height even while loading */
+    height: 650px; /* Ensure a base height even while loading */
 }
 
 /* Ensure inner divs don't break the parent layout */
@@ -108,7 +108,7 @@ section > div {
 
 /* Graph container inside comparison */
 #sector-comparison-graph {
-    height: 500px !important;
+    height: 480px !important;
     width: 100% !important;
 }
 
@@ -193,13 +193,3 @@ section:has(#choropleth-map) > div {
     color: var(--text-main) !important;        
     border: 1px solid var(--border) !important; 
 }
-
-#sector-countries-dropdown * {
-    color: #000000 !important;
-}
-
-
-#multi-country-dropdown * {
-    color: #000000 !important;
-}
-

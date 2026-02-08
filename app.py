@@ -55,6 +55,7 @@ app.layout = html.Main(
                     ],
                     className="header-top-row",
                 ),
+                # Slider container (height: auto)
                 html.Div(
                     dcc.Slider(
                         id="year-slider",
@@ -77,91 +78,78 @@ app.layout = html.Main(
             ]
         ),
         html.P("You may click on different countries!"),
+        # Map Section
         html.Section(
             [
-                # Map graph
-                dcc.Graph(
-                    id="choropleth-map",
-                    responsive=True,
-                    config={"displayModeBar": False, "staticPlot": False},
-                ),
-            ],
+                dcc.Graph(id="choropleth-map", responsive=True, className="card-map"),
+            ]
         ),
+        # Sectoral Distribution Row
         html.Section(
             [
-                # treemap graph
                 html.Div(
                     [
                         html.H2("Internal Sectoral Distribution"),
-                        dcc.Graph(
-                            id="treemap-sectores",
-                            responsive=True,
-                            config={"displayModeBar": False, "staticPlot": True},
-                        ),
+                        dcc.Graph(id="treemap-sectores", responsive=True),
                     ],
+                    className="card",
                 ),
-                # sector graph
                 html.Div(
                     [
                         html.H2("Emissions by Sector"),
-                        dcc.Graph(
-                            id="grafico-sectores",
-                            responsive=True,
-                        ),
+                        dcc.Graph(id="grafico-sectores", responsive=True),
                     ],
+                    className="card",
                 ),
             ],
+            className="grid-row",
         ),
+        # Global Comparison (Tall Card)
         html.Section(
-            id="comparison-section",
-            children=[
-                html.H2("Global Sectoral Comparison"),
+            [
                 html.Div(
                     [
+                        html.H2("Global Sectoral Comparison"),
                         html.Label("Select Countries to Compare:"),
                         dcc.Dropdown(
                             id="sector-countries-dropdown",
                             options=country_options,
                             value=[],
                             multi=True,
-                            placeholder="Select or search countries to compare...",
                         ),
+                        dcc.Graph(id="sector-comparison-graph", responsive=True),
                     ],
-                ),
-                dcc.Graph(
-                    id="sector-comparison-graph",
-                    responsive=True,
-                    config={"displayModeBar": False},
-                ),
-            ],
-        ),
-        html.Section(
-            children=[
-                html.Div(
-                    [
-                        dcc.Graph(id="pie-chart-dynamic"),
-                    ],
-                ),
-                html.Div(
-                    [
-                        dcc.Graph(id="pie-chart-capita-dynamic"),
-                    ],
+                    className="card tall-card",
                 ),
             ]
         ),
+        # Rankings Row
         html.Section(
-            id="trend-section",
-            children=[
-                html.H2("Compare Country Trends"),
-                dcc.Dropdown(
-                    id="multi-country-dropdown",
-                    options=[{"label": c, "value": c} for c in df["Country"].unique()],
-                    value=[],
-                    multi=True,
-                    placeholder="Select or search countries to compare...",
-                ),
-                dcc.Graph(id="trend-comparison-graph"),
+            [
+                html.Div([dcc.Graph(id="pie-chart-dynamic")], className="card"),
+                html.Div([dcc.Graph(id="pie-chart-capita-dynamic")], className="card"),
             ],
+            className="grid-row",
+        ),
+        # Trends Section
+        html.Section(
+            [
+                html.Div(
+                    [
+                        html.H2("Compare Country Trends"),
+                        dcc.Dropdown(
+                            id="multi-country-dropdown",
+                            options=[
+                                {"label": c, "value": c} for c in df["Country"].unique()
+                            ],
+                            value=[],
+                            multi=True,
+                        ),
+                        dcc.Graph(id="trend-comparison-graph"),
+                    ],
+                    className="card",
+                ),
+            ]
         ),
     ],
 )
@@ -433,6 +421,17 @@ def update_sector_graph(dropdown_countries, year, global_data):
             plot_bgcolor="rgba(0,0,0,0)",
             xaxis={"visible": False},
             yaxis={"visible": False},
+            margin=dict(t=50, b=80, l=40, r=10),
+            height=450,
+            legend=dict(
+                orientation="h",
+                yanchor="top",
+                y=-0.15,
+                xanchor="center",
+                x=0.5,
+                title=None,
+                font=dict(color="#7f8c8d"),
+            ),
         )
         return fig
 
