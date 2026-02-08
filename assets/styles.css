@@ -193,3 +193,11 @@ section:has(#choropleth-map) > div {
     color: var(--text-main) !important;        
     border: 1px solid var(--border) !important; 
 }
+
+#sector-countries-dropdown * {
+    color: #000000 !important;
+}
+
+#multi-country-dropdown * {
+    color: #000000 !important;
+}
