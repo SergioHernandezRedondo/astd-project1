@@ -62,13 +62,13 @@ app.layout = html.Main(
                         max=max_year,
                         value=2000,
                         marks={
-                                str(y): {
-                                    "label": str(y),
-                                    "style": {"color": "var(--text-main)"}
-                                }
-                                for y in years
-                                if y % 5 == 0
-                            },
+                            str(y): {
+                                "label": str(y),
+                                "style": {"color": "var(--text-main)"},
+                            }
+                            for y in years
+                            if y % 5 == 0
+                        },
                         step=1,
                         updatemode="drag",
                     ),
@@ -413,27 +413,29 @@ def update_sector_chart(global_data):
     [
         Input("sector-countries-dropdown", "value"),
         Input("year-slider", "value"),
-        Input("theme-switch", "value"),
         Input("session-storage", "data"),
     ],
 )
-def update_sector_graph(dropdown_countries, year, theme_value, global_data):
-    # Get country from map selection
+def update_sector_graph(dropdown_countries, year, global_data):
+    theme = global_data.get("theme", "light")
+    colors = get_theme_colors(theme)
     map_country = global_data.get("country")
 
-    # Merge dropdown selection with map selection
     countries = list(dropdown_countries) if dropdown_countries else []
     if map_country and map_country not in countries:
         countries.insert(0, map_country)
 
     if not countries:
-        return go.Figure()
+        # Return empty figure if no selection to avoid "Afghanistan" default
+        fig = go.Figure()
+        fig.update_layout(
+            paper_bgcolor="rgba(0,0,0,0)",
+            plot_bgcolor="rgba(0,0,0,0)",
+            xaxis={"visible": False},
+            yaxis={"visible": False},
+        )
+        return fig
 
-    is_dark = "dark" in theme_value
-    text_color = "#ecf0f1" if is_dark else "#333333"
-    grid_color = "rgba(255,255,255,0.1)" if is_dark else "rgba(0,0,0,0.1)"
-
-    # Filter by selected countries and current year
     data = df_sector[df_sector["Country"].isin(countries)][["Country", "Sector", year]]
 
     fig = px.bar(
@@ -446,26 +448,30 @@ def update_sector_graph(dropdown_countries, year, theme_value, global_data):
     )
 
     fig.update_layout(
-        # Transparent background to match CSS containers
+        title=dict(
+            text=f"<b>Sector Breakdown</b><br><sup>Year: {year}</sup>",
+            x=0.05,
+            y=0.95,
+            font=dict(size=16, color="#7f8c8d"),  # Grey title
+        ),
+        template=colors["template"],
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
-        font=dict(color=text_color, size=11),
-        margin=dict(t=10, b=20, l=40, r=10),
-        height=350,
-        yaxis=dict(gridcolor=grid_color, title="Mt CO₂", zeroline=False),
+        font=dict(color="#7f8c8d", size=11),  # Grey general text
+        margin=dict(t=80, b=20, l=40, r=10),
+        yaxis=dict(gridcolor=colors["grid"], title="Mt CO₂", zeroline=False),
         xaxis=dict(title=None),
         legend=dict(
             orientation="h",
             yanchor="bottom",
-            y=1.02,
+            y=-0.2,
             xanchor="center",
             x=0.5,
             title=None,
+            font=dict(color="#7f8c8d"),
         ),
-        # Smooth bar transitions on slider move
         transition_duration=500,
     )
-
     return fig
 
 
@@ -477,21 +483,17 @@ def update_sector_graph(dropdown_countries, year, theme_value, global_data):
     [Input("year-slider", "value"), Input("session-storage", "data")],
 )
 def update_dynamic_rankings(selected_year, session_data):
-    # 1. Get dynamic theme colors
     theme = session_data.get("theme", "light")
     colors = get_theme_colors(theme)
 
     def create_ranked_pie(dataframe, val_col, title_main):
-        # 2. Data Preparation: Top 5 + Others
         full_rank = dataframe.sort_values(by=val_col, ascending=False)
         top5 = full_rank.head(5)
         others_val = full_rank.iloc[5:][val_col].sum()
-
         df_pie = pd.concat(
             [top5, pd.DataFrame({"Country": ["Others"], val_col: [others_val]})]
         )
 
-        # 3. Subplots Setup: Table + Donut
         fig = make_subplots(
             rows=1,
             cols=2,
@@ -500,21 +502,20 @@ def update_dynamic_rankings(selected_year, session_data):
             horizontal_spacing=0.05,
         )
 
-        # Ranking Table
         fig.add_trace(
             go.Table(
                 header=dict(
                     values=["<b>Rank</b>", "<b>Country</b>"],
                     fill_color=colors["grid"],
                     align="left",
-                    font=dict(color=colors["text"], size=12),
+                    font=dict(color="#7f8c8d", size=12),  # Grey header
                     line_color=colors["grid"],
                 ),
                 cells=dict(
                     values=[[1, 2, 3, 4, 5], top5["Country"]],
                     fill_color="rgba(0,0,0,0)",
                     align="left",
-                    font=dict(color=colors["text"], size=11),
+                    font=dict(color="#7f8c8d", size=11),  # Grey cells
                     line_color=colors["grid"],
                     height=25,
                 ),
@@ -523,33 +524,29 @@ def update_dynamic_rankings(selected_year, session_data):
             col=1,
         )
 
-        # Donut Chart
         fig.add_trace(
             go.Pie(
                 labels=df_pie["Country"],
                 values=df_pie[val_col],
                 hole=0.5,
                 textinfo="percent",
-                hoverinfo="label+value+percent",
                 marker=dict(line=dict(color=colors["bg"], width=2)),
-                showlegend=True,
             ),
             row=1,
             col=2,
         )
 
-        # 4. Clean styling with Dynamic Title
         fig.update_layout(
             title=dict(
                 text=f"<b>{title_main}</b><br><sup>Year: {selected_year}</sup>",
                 x=0.05,
                 y=0.95,
-                font=dict(size=16, color=colors["text"]),
+                font=dict(size=16, color="#7f8c8d"),  # Grey title
             ),
             template=colors["template"],
             paper_bgcolor="rgba(0,0,0,0)",
             plot_bgcolor="rgba(0,0,0,0)",
-            font_color=colors["text"],
+            font=dict(color="#7f8c8d"),  # Grey general font
             margin=dict(l=10, r=10, t=80, b=10),
             legend=dict(
                 orientation="h",
@@ -562,13 +559,8 @@ def update_dynamic_rankings(selected_year, session_data):
         )
         return fig
 
-    # --- Generate Figures ---
-
-    # Total Emissions Figure (using df_sector)
     df_total = df_sector.groupby("Country")[selected_year].sum().reset_index()
     fig1 = create_ranked_pie(df_total, selected_year, "Top 5 Global Emitters")
-
-    # Per Capita Figure (using df)
     fig2 = create_ranked_pie(df, selected_year, "Top 5 Per Capita Emitters")
 
     return fig1, fig2
@@ -576,28 +568,22 @@ def update_dynamic_rankings(selected_year, session_data):
 
 @app.callback(
     Output("trend-comparison-graph", "figure"),
-    [
-        Input("multi-country-dropdown", "value"),
-        Input("session-storage", "data"),
-    ],
+    [Input("multi-country-dropdown", "value"), Input("session-storage", "data")],
 )
 def update_trend_comparison(dropdown_countries, global_data):
-    # 1. Get dynamic theme colors (using your existing helper)
     theme = global_data.get("theme", "light")
     colors = get_theme_colors(theme)
-
-    # 2. Get country from map selection (Global Sync)
     map_country = global_data.get("country")
 
-    # 3. Merge dropdown selection with map selection (Same logic as your Sector graph)
     countries = list(dropdown_countries) if dropdown_countries else []
     if map_country and map_country not in countries:
         countries.insert(0, map_country)
 
     if not countries:
-        return go.Figure()
+        return go.Figure().update_layout(
+            paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)"
+        )
 
-    # 4. Filter and reshape data
     df_multi = df[df["Country"].isin(countries)]
     df_long = df_multi.melt(
         id_vars=["Country"],
@@ -606,7 +592,6 @@ def update_trend_comparison(dropdown_countries, global_data):
         value_name="Emissions",
     )
 
-    # 5. Create Line Plot
     fig = px.line(
         df_long,
         x="Year",
@@ -616,12 +601,12 @@ def update_trend_comparison(dropdown_countries, global_data):
         color_discrete_sequence=px.colors.qualitative.Safe,
     )
 
-    # 6. Clean styling
     fig.update_layout(
+        title=dict(font=dict(color="#7f8c8d", size=16)),  # Grey title
         template=colors["template"],
         paper_bgcolor=colors["bg"],
         plot_bgcolor=colors["bg"],
-        font_color=colors["text"],
+        font_color="#7f8c8d",  # Grey labels/legend
         xaxis=dict(
             gridcolor=colors["grid"],
             showline=True,
@@ -634,21 +619,18 @@ def update_trend_comparison(dropdown_countries, global_data):
             showline=True,
             linecolor=colors["grid"],
         ),
-        # Horizontal legend at the bottom for a clean look
         legend=dict(
             orientation="h",
             yanchor="bottom",
             y=-0.3,
             xanchor="center",
             x=0.5,
-            bgcolor="rgba(0,0,0,0)",
             title=None,
         ),
         margin=dict(l=40, r=20, t=60, b=80),
         hovermode="x unified",
-        transition_duration=500,  # Smooth transitions like your Sector graph
+        transition_duration=500,
     )
-
     return fig
 
 
