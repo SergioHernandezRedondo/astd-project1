@@ -98,5 +98,3 @@ http://127.0.0.1:8050
 
 
 The interactive dashboard will be displayed, allowing exploration of CO₂ emissions by country, sector, and year.
-## Dashboard Features
-
