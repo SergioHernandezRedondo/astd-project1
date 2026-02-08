@@ -2,17 +2,16 @@ import pandas as pd
 import dash
 from dash import dcc, html, Input, Output, State
 import plotly.express as px
-from utils.utils import *
-from utils.figures import *
-from pathlib import Path
-import numpy as np
 import plotly.graph_objects as go
+import numpy as np
+import os
+from utils.utils import get_max_min_emission, get_years
 
-BASE_DIR = Path(__file__).resolve().parent
-
-CSV_PATH = f"{BASE_DIR}/../../data/CO2.xlsx"
+CSV_PATH = os.path.join("data", "CO2.xlsx")
 
 df = pd.read_excel(CSV_PATH, sheet_name="fossil_CO2_per_capita_by_countr")
+df_sector = pd.read_excel(CSV_PATH, sheet_name="fossil_CO2_by_sector_and_countr")
+
 columns = df.columns.to_list()
 columns_years = [col for col in df.columns if str(col).isnumeric()]
 p95 = np.percentile(df[columns_years].values.flatten(), 95)
@@ -26,7 +25,7 @@ min_year, max_year, years = get_years(df)
 # Country options for dropdown
 country_options = [{"label": c, "value": c} for c in sorted(df["Country"].unique())]
 
-app = dash.Dash(__name__)
+app = dash.Dash(__name__, assets_folder="assets")
 
 app.layout = html.Main(
     id="main-container",
@@ -282,7 +281,7 @@ def update_treemap(global_data):
         selected_year = 1990
 
     # 2. Filter data by country and year, removing nulls
-    df_filtered = df[df["ISOcode"] == iso_code][["Sector", selected_year]]
+    df_filtered = df_sector[df_sector["ISOcode"] == iso_code][["Sector", selected_year]]
     df_filtered = df_filtered[df_filtered[selected_year] > 0]
 
     # 3. Create Treemap with color mapping based on emissions
@@ -333,7 +332,7 @@ def update_sector_chart(global_data):
         selected_year = 1990
 
     # 2. Filter and reshape data from wide to long format
-    df_country = df[df["ISOcode"] == iso_code]
+    df_country = df_sector[df_sector["ISOcode"] == iso_code]
     df_long = df_country.melt(
         id_vars=["Sector", "Country", "ISOcode"],
         var_name="Year",
@@ -401,7 +400,7 @@ def update_sector_graph(dropdown_countries, year, theme_value, global_data):
     grid_color = "rgba(255,255,255,0.1)" if is_dark else "rgba(0,0,0,0.1)"
 
     # Filter by selected countries and current year
-    data = df[df["Country"].isin(countries)][["Country", "Sector", year]]
+    data = df_sector[df_sector["Country"].isin(countries)][["Country", "Sector", year]]
 
     fig = px.bar(
         data,
