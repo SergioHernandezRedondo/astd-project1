@@ -27,15 +27,25 @@ This structure supports spatio-temporal analysis as well as sectoral comparisons
 
 
 ├── .idea/
+
 │   └── IDE configuration files
+
 ├── data/
+
 │   └── CO2.xlsx              # Dataset provided by ALLSTAT
+
 ├── main/
+
 │   └── source/
+
 │       ├── utils/
+
 │       │   └── utility functions for data processing and statistics
+
 │       └── app.py            # Main Dash application
+
 ├── guide.md                  # Usage and navigation guide for the dashboard
+
 └── README.md                 # Project documentation
 
 The dashboard is developed using Dash, a Python framework designed for creating interactive data visualization web applications.
