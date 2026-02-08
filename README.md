@@ -105,4 +105,4 @@ The interactive dashboard will be displayed, allowing exploration of CO₂ emiss
 
 ## Dashboard features video
 
-https://drive.google.com/file/d/17hFhgrMKqZXX_WGwGmQUiBSmc2PZJf0I/view?usp=sharing
+https://drive.google.com/file/d/1OpZ31sz3pCBz_LdrUCdQ6F8b3L-2T9ka/view?usp=sharing
