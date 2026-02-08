@@ -92,6 +92,10 @@ python app.py
 ```
 5. Access the dashboard
 
+## Dashboard features video
+
+https://drive.google.com/file/d/17hFhgrMKqZXX_WGwGmQUiBSmc2PZJf0I/view?usp=sharing
+
 Once the application is running, open a web browser and go to:
 
 http://127.0.0.1:8050
