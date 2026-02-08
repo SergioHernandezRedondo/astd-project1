@@ -21,7 +21,6 @@ Country: Full country name.
 
 Year columns: Numerical values representing CO₂ emissions for each year (1970-2021).
 
-This structure supports spatio-temporal analysis as well as sectoral comparisons, making the dataset suitable for advanced interactive visualizations.
 
 ## Project structure
 
